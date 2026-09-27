@@ -894,7 +894,7 @@ details.card > .form-grid { margin-top: 14px; }
     </div>
   </details>
 
-  <div class="hint" style="text-align:center;padding:6px 0 10px">Painel Pessoal · Teto de Gastos + FuelTrack · v3</div>
+  <div class="hint" style="text-align:center;padding:6px 0 10px">Painel Pessoal · Teto de Gastos + FuelTrack · v3.1</div>
 </section>
 
 </main>
@@ -1666,10 +1666,22 @@ function populateCategories() {
   [...activeNames, 'Outros'].forEach(n => billCat.append(el('option', { value: n }, n)));
   if (activeNames.includes(cur) || cur === 'Outros') billCat.value = cur;
 
+  // Cartão: categorias padrão + as que já existem nos lançamentos (ex.: digitadas na planilha)
+  const usedCartao = state.expenses.filter(e => e.ciclo === 'cartao').map(e => e.cat).filter(Boolean);
+  const extras = Array.from(new Set(usedCartao)).filter(c => !CARTAO_CATS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const expCat = $('expCat');
+  const curE = expCat.value;
+  const labels = { Transporte: 'Transporte / Combustível', Moradia: 'Moradia / Contas', Lazer: 'Lazer / Restaurante' };
+  expCat.innerHTML = '';
+  [...CARTAO_CATS.filter(c => c !== 'Outros'), ...extras, 'Outros'].forEach(n => expCat.append(el('option', { value: n }, labels[n] || n)));
+  if ([...expCat.options].some(o => o.value === curE)) expCat.value = curE;
+
   const hist = $('histCatFilter');
   const curH = hist.value;
   hist.innerHTML = '<option value="">Todas</option>';
-  Array.from(new Set([...CARTAO_CATS, ...names])).forEach(n => hist.append(el('option', { value: n }, n)));
+  const allUsed = state.expenses.map(e => e.cat).filter(Boolean);
+  Array.from(new Set([...CARTAO_CATS, ...names, ...allUsed])).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .forEach(n => hist.append(el('option', { value: n }, n)));
   hist.value = curH;
 }
 
@@ -1864,7 +1876,8 @@ function startEditExpense(id) {
   editingId = it.id;
   $('expDesc').value = it.desc;
   $('expVal').value = toInputNum(it.value);
-  $('expCat').value = CARTAO_CATS.includes(it.cat) ? it.cat : 'Outros';
+  if (![...$('expCat').options].some(o => o.value === it.cat)) $('expCat').append(el('option', { value: it.cat }, it.cat));
+  $('expCat').value = it.cat; // mantém a categoria original (antes virava "Outros" ao editar)
   $('expDate').value = it.date;
   $('expCompetencia').value = expenseCompetencia(it);
   $('formTitle').textContent = '✏️ Editar despesa';
