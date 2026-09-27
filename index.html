@@ -630,7 +630,7 @@ details.card > .form-grid { margin-top: 14px; }
             <button type="button" class="pill on" data-trajeto="misto" style="--pill-c:var(--c-veiculo)">🔀 Misto</button>
           </div>
         </div>
-        <div class="section-label">Preencha 2 dos 3 — o terceiro é calculado</div>
+        <div class="section-label">Valores do cupom — se faltar um, ele é calculado só como referência</div>
         <div class="row-2">
           <div class="field"><label for="fPPL">R$ / litro</label><input id="fPPL" inputmode="decimal" placeholder="5,89"><div class="preview" id="pvPPL"></div></div>
           <div class="field"><label for="fLit">Litros</label><input id="fLit" inputmode="decimal" placeholder="40,5"><div class="preview" id="pvLit"></div></div>
@@ -1183,6 +1183,7 @@ function normalizeFuel(f) {
     fuelType: ['gas', 'eth', 'die'].includes(f.fuelType) ? f.fuelType : 'gas',
     trajeto: ['cidade', 'estrada', 'misto'].includes(f.trajeto) ? f.trajeto : '',
     pricePerLiter: Number(f.pricePerLiter) || 0, liters: Number(f.liters) || 0, total: Number(f.total) || 0,
+    calcField: ['total', 'liters', 'pricePerLiter'].includes(f.calcField) ? f.calcField : '',
     note: f.note && f.note !== 'undefined' ? String(f.note) : '',
     expenseCiclo: f.expenseCiclo === 'cartao' || f.expenseCiclo === 'contas' ? f.expenseCiclo : ''
   };
@@ -1328,8 +1329,14 @@ function handleApiError(err, context) {
     showSyncError('⚠️ A planilha está com uma versão antiga do Apps Script. Cole o AppsScript_Unificado.gs novo e publique uma nova versão.');
     return;
   }
-  setSync('offline', context === 'pull' ? 'Sem conexão' : 'Envio pendente');
-  showSyncError(`Não foi possível falar com a planilha: ${err.message || 'erro de rede'}. Tudo continua salvo neste aparelho e será enviado quando a conexão voltar.`);
+  const network = err instanceof TypeError; // fetch falhou: sem internet / servidor inacessível
+  if (network) {
+    setSync('offline', 'Sem conexão');
+    showSyncError('Sem conexão com a planilha agora. Tudo continua salvo neste aparelho e será enviado quando a conexão voltar.');
+  } else {
+    setSync('offline', 'Erro na planilha');
+    showSyncError(`A planilha respondeu com um erro: "${err.message}". Suas alterações continuam guardadas neste aparelho. Se persistir, envie esta mensagem para ajuste.`);
+  }
 }
 
 /* ─── Fila de envio (outbox) ───
@@ -2507,10 +2514,13 @@ function autoCalc(pplId, litId, totId, pvPPL, pvLit, pvTot) {
 function resolveFields(ppl, lit, tot) {
   let p = parseNum(ppl) || 0, l = parseNum(lit) || 0, t = parseNum(tot) || 0;
   if ([p > 0, l > 0, t > 0].filter(Boolean).length < 2) return null;
-  if (p > 0 && l > 0 && !t) t = p * l;
-  if (p > 0 && t > 0 && !l) l = t / p;
-  if (l > 0 && t > 0 && !p) p = t / l;
-  return { pricePerLiter: Math.round(p * 1000) / 1000, liters: Math.round(l * 1000) / 1000, total: round2(t) };
+  // O campo que faltar é calculado só como referência (calcField): usado nas contas do app,
+  // mas não é gravado na planilha — lá ficam apenas os valores reais do cupom.
+  let calcField = '';
+  if (p > 0 && l > 0 && !t) { t = p * l; calcField = 'total'; }
+  if (p > 0 && t > 0 && !l) { l = t / p; calcField = 'liters'; }
+  if (l > 0 && t > 0 && !p) { p = t / l; calcField = 'pricePerLiter'; }
+  return { pricePerLiter: Math.round(p * 1000) / 1000, liters: Math.round(l * 1000) / 1000, total: round2(t), calcField };
 }
 function selectTrajeto(tj) {
   $('trajetoPills').querySelectorAll('.pill').forEach(p => p.classList.toggle('on', p.dataset.trajeto === tj));
@@ -2730,6 +2740,8 @@ function renderDashAlerts() {
 }
 
 /* ─── Histórico de abastecimentos ─── */
+const calcMark = (f, k) => f.calcField === k ? '≈ ' : '';
+const calcAttr = (f, k) => f.calcField === k ? ' style="color:var(--muted)" title="Calculado só como referência (não está na planilha)"' : '';
 function renderFuelHistory() {
   const box = $('fuelHistoryList');
   const fuels = calcFuels().reverse();
@@ -2754,9 +2766,9 @@ function renderFuelHistory() {
       </div>
       <div class="fuel-grid">
         <div><div class="k">Parcial</div><div class="v">${fmtN(f.partial, 0)} km</div></div>
-        <div><div class="k">Litros</div><div class="v">${fmtN(f.liters, 2)} L</div></div>
-        <div><div class="k">R$/L</div><div class="v">${esc(formatBRL(f.pricePerLiter))}</div></div>
-        <div><div class="k">Total pago</div><div class="v">${esc(formatBRL(f.total))}</div></div>
+        <div><div class="k">Litros</div><div class="v"${calcAttr(f, 'liters')}>${calcMark(f, 'liters')}${fmtN(f.liters, 2)} L</div></div>
+        <div><div class="k">R$/L</div><div class="v"${calcAttr(f, 'pricePerLiter')}>${calcMark(f, 'pricePerLiter')}${esc(formatBRL(f.pricePerLiter))}</div></div>
+        <div><div class="k">Total pago</div><div class="v"${calcAttr(f, 'total')}>${calcMark(f, 'total')}${esc(formatBRL(f.total))}</div></div>
         <div><div class="k">Custo/km</div><div class="v">${f.costPerKm ? esc(formatBRL(f.costPerKm)) : '—'}</div></div>
         <div></div>
         ${!first && f.consumption ? `<div class="calc">🧮 ${fmtN(f.partial, 0)} km ÷ ${fmtN(f.prevLiters, 2)} L de ${esc(FUEL_LABELS[f.burnedFuel].toLowerCase())} (abast. de ${fmtDM(f.prevDate)}) = <strong>${fmtN(f.consumption)} km/L</strong> · ${esc(formatBRL(f.prevTotal))} ÷ ${fmtN(f.partial, 0)} km = <strong>${esc(formatBRL(f.costPerKm))}/km</strong></div>` : ''}
@@ -2778,14 +2790,15 @@ function openEditFuel(id) {
   $('eFuelType').value = f.fuelType;
   $('eTrajeto').value = f.trajeto || '';
   $('ePartial').value = toInputNum(f.partial);
-  $('ePPL').value = toInputNum(f.pricePerLiter);
-  $('eLit').value = toInputNum(f.liters);
-  $('eTot').value = toInputNum(f.total);
+  $('ePPL').value = f.calcField === 'pricePerLiter' ? '' : toInputNum(f.pricePerLiter);
+  $('eLit').value = f.calcField === 'liters' ? '' : toInputNum(f.liters);
+  $('eTot').value = f.calcField === 'total' ? '' : toInputNum(f.total);
   $('eNote').value = f.note || '';
   $('eLinkExpense').checked = !!f.expenseCiclo;
   setSeg('eLinkCiclo', f.expenseCiclo || state.fuelCiclo || 'cartao');
   syncLinkUI('eLinkExpense', 'eLinkCiclo');
   ['epPPL', 'epLit', 'epTot'].forEach(x => $(x).textContent = '');
+  autoCalc('ePPL', 'eLit', 'eTot', 'epPPL', 'epLit', 'epTot');
   openModal('editFuelModal');
 }
 
@@ -3052,7 +3065,7 @@ async function saveConnection() {
     clearSyncError();
     showToast('✅ Conectado à planilha.');
     renderConnState();
-    await pullAll({ silent: true });
+    await pullAll({ silent: false });
   } catch (err) {
     showToast('❌ ' + err.message, { error: true, duration: 6000 });
   } finally {
