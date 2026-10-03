@@ -26,3 +26,10 @@ test('index.html carrega o app como módulo e o CSS externo', () => {
   assert.match(html, /<link rel="stylesheet" href="styles\.css">/);
   assert.doesNotMatch(html, /<script>[\s\S]*<\/script>/, 'não deve haver script embutido');
 });
+
+test('sw.js busca na rede primeiro e instala sem reaproveitar cópia velha do navegador', () => {
+  // Cache primeiro para os módulos fez a página nova rodar com código antigo (botão de conserto sem efeito)
+  assert.doesNotMatch(sw, /caches\.match\(req\)\.then\(hit => hit \|\|/);
+  assert.match(sw, /cache: 'reload'/);
+  assert.match(sw, /cache: 'no-cache'/);
+});

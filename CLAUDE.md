@@ -194,6 +194,9 @@ UI (tema, tela, parcial atual, último trajeto) em `painel_pessoal_ui`.
 
 - Raiz do repositório: `index.html`, `styles.css`, `js/`, `manifest.webmanifest`, `sw.js` (offline; rede primeiro
   para a página, nunca faz cache do Apps Script) e `icons/`. `package.json`/`tests/` só servem para os testes.
+- `sw.js`: **rede primeiro para tudo** (página e módulos, com `cache: 'no-cache'`), cache só sem internet; instala com
+  `cache: 'reload'` e `skipWaiting`. Lição (03/10/2026): com módulos em cache-primeiro, a página nova rodava com JS
+  antigo e o botão de conserto não fazia nada. Após publicar, a 1ª abertura no celular ainda usa o SW antigo; da 2ª em diante ok.
 - Ao publicar versão nova, aumentar `VERSAO` no `sw.js` (o app mostra "Nova versão disponível → Atualizar")
   e, se criar arquivo novo em `js/`, incluí-lo em `ARQUIVOS` (o teste de publicação avisa).
 - Passo a passo completo em `GUIA_PUBLICACAO.md`.
