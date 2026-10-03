@@ -1,7 +1,19 @@
 // Service worker do Painel Pessoal: abre sem internet e busca a versão nova quando há conexão.
 // Ao publicar uma versão nova do app, aumente o número abaixo.
-const VERSAO = 'painel-v3-3';
-const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
+const VERSAO = 'painel-v4-0';
+const ARQUIVOS = [
+  './', './index.html', './styles.css', './manifest.webmanifest',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
+  // módulos do app (o teste tests/publicacao.test.mjs avisa se faltar algum)
+  './js/ajustes.js', './js/app.js', './js/estado.js',
+  './js/gastos/cartao.js', './js/gastos/comum.js', './js/gastos/contas.js',
+  './js/gastos/exclusao.js', './js/gastos/fixas.js', './js/gastos/historico.js',
+  './js/gastos/parcelas.js', './js/gastos/teto.js', './js/graficos.js',
+  './js/main.js', './js/modal.js', './js/sync.js',
+  './js/util.js', './js/veiculo/abastecer.js', './js/veiculo/calculos.js',
+  './js/veiculo/historico.js', './js/veiculo/manutencao.js', './js/veiculo/painel.js',
+  './js/veiculo/tela.js', './js/veiculo/vinculo.js'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSAO).then(c => c.addAll(ARQUIVOS)));
