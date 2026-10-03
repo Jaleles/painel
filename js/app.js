@@ -13,7 +13,7 @@ import { $, LEGACY_FUEL_KEY, sanitizeDateStr, showToast, store, todayISO } from 
 import { autoCalc, previewConsumption, resetFuelForm, saveFuel, selectFuel, selectTrajeto } from './veiculo/abastecer.js';
 import { calcFuels, vehicleStats } from './veiculo/calculos.js';
 import { saveEditFuel } from './veiculo/historico.js';
-import { askOdometer, confirmMaintDone, confirmOdometer, saveMaint } from './veiculo/manutencao.js';
+import { askOdometer, confirmMaintDone, confirmOdometer, saveMaint, saveRepair } from './veiculo/manutencao.js';
 import { renderAutonomy, renderFlexCompare, renderVehicleCharts } from './veiculo/painel.js';
 import { renderVehicle, switchVehSub } from './veiculo/tela.js';
 import { setSeg, syncLinkUI } from './veiculo/vinculo.js';
@@ -134,16 +134,18 @@ function bindEvents() {
   ['flexEth', 'flexGas'].forEach(id => $(id).addEventListener('input', () => renderFlexCompare(vehicleStats(calcFuels()))));
   ['fPPL', 'fLit', 'fTot'].forEach(id => $(id).addEventListener('input', () => autoCalc('fPPL', 'fLit', 'fTot', 'pvPPL', 'pvLit', 'pvTot')));
   ['ePPL', 'eLit', 'eTot'].forEach(id => $(id).addEventListener('input', () => autoCalc('ePPL', 'eLit', 'eTot', 'epPPL', 'epLit', 'epTot')));
-  ['fLinkCiclo', 'eLinkCiclo', 'doneLinkCiclo'].forEach(id =>
+  ['fLinkCiclo', 'eLinkCiclo', 'doneLinkCiclo', 'rLinkCiclo'].forEach(id =>
     $(id).querySelectorAll('button').forEach(b => b.addEventListener('click', () => setSeg(id, b.dataset.ciclo))));
   $('fLinkExpense').addEventListener('change', () => syncLinkUI('fLinkExpense', 'fLinkCiclo'));
   $('eLinkExpense').addEventListener('change', () => syncLinkUI('eLinkExpense', 'eLinkCiclo'));
   $('doneLinkExpense').addEventListener('change', () => syncLinkUI('doneLinkExpense', 'doneLinkCiclo'));
+  $('rLinkExpense').addEventListener('change', () => syncLinkUI('rLinkExpense', 'rLinkFields'));
   $('btnSaveFuel').addEventListener('click', saveFuel);
   $('btnSaveEditFuel').addEventListener('click', saveEditFuel);
   $('btnUpdateOdo').addEventListener('click', askOdometer);
   $('btnConfirmOdo').addEventListener('click', confirmOdometer);
   $('btnSaveMaint').addEventListener('click', saveMaint);
+  $('btnSaveRepair').addEventListener('click', saveRepair);
   $('btnConfirmMaintDone').addEventListener('click', confirmMaintDone);
   $('currentTrip').addEventListener('input', () => {
     ui.currentTrip = $('currentTrip').value; saveUI();

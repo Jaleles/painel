@@ -132,6 +132,7 @@ function queueFuelDelete(id) { enqueue('fuel:' + id, 'deleteFuel', { id: String(
 function queueMaint(m) { const { history, ...item } = m; enqueue('maint:' + m.id, 'saveMaint', { item }); }
 function queueMaintDelete(id) { enqueue('maint:' + id, 'deleteMaint', { id: String(id) }); }
 function queueHist(maintId, h) { enqueue('mhist:' + h.id, 'saveMaintHist', { maintId, item: h }); }
+function queueHistDelete(maintId, id) { enqueue('mhist:' + id, 'deleteMaintHist', { id: String(id), maintId }); }
 function queueVehicleFull() { enqueue('vehicle:full', 'saveVehicle', { vehicle: vehicleSnapshot() }); }
 
 /* ─── Buscar tudo da planilha ─── */
@@ -204,6 +205,11 @@ function applyOp(op) {
       break;
     }
     case 'deleteMaint': state.maintenances = state.maintenances.filter(x => x.id !== b.id); break;
+    case 'deleteMaintHist': {
+      const m = state.maintenances.find(x => x.id === b.maintId);
+      if (m) m.history = m.history.filter(h => h.id !== b.id);
+      break;
+    }
     case 'saveMaintHist': {
       const m = state.maintenances.find(x => x.id === b.maintId);
       if (m) { const h = normalizeHist(b.item, 0, m.id); upsertById(m.history, h); m.history.sort((x, y) => y.date.localeCompare(x.date)); }
@@ -231,4 +237,4 @@ async function testConnection(url, chave) {
   return info;
 }
 
-export { apiPost, applyOp, applyServerData, backend, cleanExpense, clearSyncError, deleteExpenseRemote, deleteFixedRemote, enqueue, enqueueRaw, finishSyncStatus, flush, flushTimer, flushing, handleApiError, isPending, pendingCount, pullAll, pulling, queueFuel, queueFuelDelete, queueHist, queueMaint, queueMaintDelete, queueVehicleFull, refreshSyncBadge, removeSent, saveFixedRemote, scheduleFlush, setSync, showSyncError, syncExpense, testConnection, upsertById };
+export { apiPost, applyOp, applyServerData, backend, cleanExpense, clearSyncError, deleteExpenseRemote, deleteFixedRemote, enqueue, enqueueRaw, finishSyncStatus, flush, flushTimer, flushing, handleApiError, isPending, pendingCount, pullAll, pulling, queueFuel, queueFuelDelete, queueHist, queueHistDelete, queueMaint, queueMaintDelete, queueVehicleFull, refreshSyncBadge, removeSent, saveFixedRemote, scheduleFlush, setSync, showSyncError, syncExpense, testConnection, upsertById };

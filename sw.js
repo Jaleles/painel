@@ -1,6 +1,6 @@
 // Service worker do Painel Pessoal: abre sem internet e busca a versão nova quando há conexão.
 // Ao publicar uma versão nova do app, aumente o número abaixo.
-const VERSAO = 'painel-v4-0';
+const VERSAO = 'painel-v4-1';
 const ARQUIVOS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',

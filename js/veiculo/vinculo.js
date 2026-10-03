@@ -10,6 +10,9 @@ import { $, FUEL_LABELS, fmtN, round2 } from '../util.js';
 const fuelExpenseId = fuelId => 'ab_' + fuelId;
 const maintExpenseId = histId => 'mn_' + histId;
 const sortFuelsAsc = list => [...list].sort((a, b) => a.date.localeCompare(b.date) || (a.ord || 1e9) - (b.ord || 1e9) || a.id.localeCompare(b.id));
+// Consertos avulsos ficam como histórico de uma "manutenção" sem intervalo de km: não gera alerta
+const isRepairLog = m => !(m.interval > 0);
+const alertMaintenances = () => state.maintenances.filter(m => !isRepairLog(m));
 
 function segValue(containerId) {
   const b = $(containerId).querySelector('button.active');
@@ -59,4 +62,4 @@ function unlinkVehicleFromExpense(exp) {
   }
 }
 
-export { fuelExpenseDesc, fuelExpenseId, maintExpenseId, removeLinkedExpense, segValue, setSeg, sortFuelsAsc, syncLinkUI, unlinkVehicleFromExpense, upsertLinkedExpense };
+export { alertMaintenances, fuelExpenseDesc, fuelExpenseId, isRepairLog, maintExpenseId, removeLinkedExpense, segValue, setSeg, sortFuelsAsc, syncLinkUI, unlinkVehicleFromExpense, upsertLinkedExpense };

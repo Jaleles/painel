@@ -68,6 +68,12 @@ Tema claro/escuro (segue o sistema até o usuário escolher). Última tela é le
   desfaz o vínculo (o abastecimento permanece).
 - **Manutenção realizada** também pode lançar o custo como despesa
   (`id = mn_<idHistórico>`, `origem = "manutencao:<idAlerta>"`).
+- **Consertos e serviços avulsos** (farol, escapamento, fluido… sem intervalo de km), na aba Manut.: ficam no
+  histórico de uma manutenção especial `id = consertos` com `interval = 0` (reaproveita as abas Manutencoes/
+  ManutHistorico, sem mudar o Apps Script; descrição vai em `obs`). `interval = 0` nunca gera alerta
+  (`alertMaintenances`). À vista + "Lançar como despesa" → despesa vinculada `mn_<idHistórico>`. Parcelado (2x+) →
+  parcelas comuns no Cartão/Contas ("Conserto · X (parc 1/3)"), **sem** vínculo e com `despesa` vazia no histórico
+  (evita a planilha recriar a despesa cheia). Excluir usa `deleteMaintHist { id, maintId }`.
 - Abastecimentos importados do FuelTrack antigo **não** viram despesas
   (evita duplicar gastos que já tinham sido lançados à mão).
 - A aba Teto mostra "Veículo no mês" (combustível, manutenção, km) — só informativo.

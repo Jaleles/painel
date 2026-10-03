@@ -2,6 +2,7 @@ import { getOdometer, state, ui } from '../estado.js';
 import { drawChart } from '../graficos.js';
 import { $, FUEL_COLORS, FUEL_ICONS, FUEL_LABELS, compactBRL, el, esc, fmtDM, fmtDateBR, fmtN, formatBRL, monthLabel, monthShort, parseNum, toInputNum } from '../util.js';
 import { TRAJETOS, calcFuels, lastPrice, monthlySummary, vehicleStats } from './calculos.js';
+import { alertMaintenances } from './vinculo.js';
 
 /* ─── Painel ─── */
 function renderVehiclePanel() {
@@ -14,7 +15,7 @@ function renderVehiclePanel() {
   const chips = $('vehChips'); chips.innerHTML = '';
   Object.entries(st.byFuel).forEach(([ft, a]) => { if (a.avg) chips.append(el('span', { class: 'chip' }, `${FUEL_ICONS[ft]} ${fmtN(a.avg)} km/L`)); });
   if (st.cpk) chips.append(el('span', { class: 'chip' }, `💸 ${formatBRL(st.cpk)}/km`));
-  const due = state.maintenances.filter(m => m.lastOdo + m.interval - getOdometer() <= m.warnKm).length;
+  const due = alertMaintenances().filter(m => m.lastOdo + m.interval - getOdometer() <= m.warnKm).length;
   if (due) chips.append(el('span', { class: 'chip', style: 'color:var(--warning)' }, `🔧 ${due} manutenção(ões) próxima(s)`));
 
   $('statCpk').textContent = st.cpk ? formatBRL(st.cpk) : '—';
@@ -143,7 +144,7 @@ function renderVehicleCharts() {
 
 function renderDashAlerts() {
   const box = $('dashAlerts');
-  const pend = state.maintenances.filter(m => m.lastOdo + m.interval - getOdometer() <= m.warnKm);
+  const pend = alertMaintenances().filter(m => m.lastOdo + m.interval - getOdometer() <= m.warnKm);
   box.innerHTML = '';
   if (!pend.length) return;
   const card = el('div', { class: 'card' }, el('div', { class: 'card-title' }, '⚠️ Manutenções próximas'));
