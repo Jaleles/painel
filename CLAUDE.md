@@ -1,8 +1,8 @@
 # Contexto do Projeto — Painel Pessoal (Teto de Gastos + FuelTrack)
 
 Repositório: `github.com/Jaleles/painel` (GitHub Pages). O código é a fonte da
-verdade do "como"; este documento explica o "porquê". O `AppsScript_Unificado.gs`
-e o `GUIA_PUBLICACAO.md` ainda não estão no repositório.
+verdade do "como"; este documento explica o "porquê". O Apps Script da planilha está em
+`apps-script/AppsScript_Unificado.gs` (o `GUIA_PUBLICACAO.md` ainda não está no repositório).
 
 ## O que é
 
@@ -136,6 +136,12 @@ Conexão (`painel_pessoal_conn` = `{url, chave}`) fica **fora** do state: não v
 UI (tema, tela, parcial atual, último trajeto) em `painel_pessoal_ui`.
 
 ## Planilha / Apps Script (`AppsScript_Unificado.gs`, versão `unificado-3`)
+
+- Código em `apps-script/AppsScript_Unificado.gs`. **Mudar o arquivo no Git não atualiza a planilha**: é preciso colar
+  no editor do Apps Script e criar **nova versão da implantação** (a URL continua a mesma). Mudança só de comentário
+  não precisa. Ao mudar comportamento, aumentar `VERSION` e avisar o usuário que precisa reimplantar.
+- Não tem segredo no código (chave em Script Properties, URL só no aparelho): pode ficar no repositório público.
+- `loadAll` (compat. FuelTrack) é candidato a remoção na limpeza de legado.
 
 - **A planilha é a fonte da verdade** e o usuário **lança/corrige direto nela** (confere e faz relatórios lá).
 - **Colunas em português, localizadas pelo nome do cabeçalho**: normaliza (sem acento/maiúsculas/espaços e ignora
